@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LoginGuard | Login threat monitor</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <h2>🛡 LoginGuard</h2>
+    <p class="subtitle">Login threat monitor</p>
+
+    <nav>
+      <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+      <button class="nav-btn" data-page="events">Login events</button>
+      <button class="nav-btn" data-page="alerts">Security alerts</button>
+      <button class="nav-btn" data-page="investigation">Investigation</button>
+      <button class="nav-btn" data-page="baselines">Baselines</button>
+      <button class="nav-btn" data-page="import">Import data</button>
+      <button class="nav-btn" data-page="login-analyzer">Login Analyzer</button>
+    </nav>
+
+    <p class="sidebar-footer">Security operations</p>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 id="page-title">Security dashboard</h1>
+        <p id="page-sub">Monitor authentication activity and anomalies.</p>
+      </div>
+      <span id="status" class="status">Checking server…</span>
+    </header>
+
+    <!-- Dashboard -->
+    <section id="dashboard" class="page">
+      <div class="stats">
+        <article class="card stat">
+          <p>Total login events</p>
+          <h2 id="totalEvents">–</h2>
+        </article>
+        <article class="card stat">
+          <p>Alerts detected</p>
+          <h2 id="totalAlerts">–</h2>
+        </article>
+        <article class="card stat danger">
+          <p>High-risk alerts</p>
+          <h2 id="highRisk">–</h2>
+        </article>
+        <article class="card stat">
+          <p>Pending reviews</p>
+          <h2 id="pendingReviews">–</h2>
+        </article>
+      </div>
+
+      <div class="split">
+        <article class="card">
+          <h2>Recent security alerts</h2>
+          <div id="recentAlerts"><p>Loading alerts…</p></div>
+        </article>
+        <article class="card">
+          <h2>Alerts by severity</h2>
+          <div id="severityBars"></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Login events -->
+    <section id="events" class="page hidden">
+      <article class="card">
+        <h2>Login event history</h2>
+        <div class="filters">
+          <input id="eventSearch" type="search"
+            placeholder="Search user, IP, location or device"
+            aria-label="Search login events">
+
+          <select id="eventStatus" aria-label="Filter by result">
+            <option value="all">All results</option>
+            <option value="success">Successful</option>
+            <option value="failure">Failed</option>
+          </select>
+
+          <span id="eventCount" class="muted"></span>
+        </div>
+        <div id="eventContent" class="table-wrap"></div>
+      </article>
+    </section>
+
+    <!-- Alerts -->
+    <section id="alerts" class="page hidden">
+      <article class="card">
+        <h2>Security alerts</h2>
+
+        <div class="filters">
+          <div class="chips" id="severityChips"
+            role="group" aria-label="Filter by severity">
+            <button class="chip active" data-sev="all">All</button>
+            <button class="chip" data-sev="high">High</button>
+            <button class="chip" data-sev="medium">Medium</button>
+            <button class="chip" data-sev="low">Low</button>
+          </div>
+
+          <select id="alertStatus" aria-label="Filter by review status">
+            <option value="all">Any status</option>
+            <option value="open">Open</option>
+            <option value="needs_review">Needs review</option>
+            <option value="suspicious">Suspicious</option>
+            <option value="legitimate">Legitimate</option>
+          </select>
+
+          <span id="alertCount" class="muted"></span>
+        </div>
+
+        <div id="alertContent"></div>
+      </article>
+    </section>
+
+    <!-- Investigation -->
+    <section id="investigation" class="page hidden">
+      <div id="investigationContent">
+        <article class="card">
+          <p>Select an alert to investigate.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Baselines -->
+    <section id="baselines" class="page hidden">
+      <article class="card">
+        <h2>Behavioral baselines</h2>
+        <div class="filters">
+          <input id="baselineSearch" type="search"
+            placeholder="Search by user ID"
+            aria-label="Search baselines">
+        </div>
+        <div id="baselineContent" class="baseline-grid"></div>
+      </article>
+    </section>
+
+    <!-- Import -->
+    <section id="import" class="page hidden">
+      <article class="card">
+        <h2>Import login data</h2>
+
+        <form id="importForm" novalidate>
+          <label for="csvFile">Choose a CSV file</label>
+          <input id="csvFile" type="file" accept=".csv">
+          <p class="muted" id="importHint"></p>
+          <div id="importValidation" class="notice hidden" role="status"></div>
+          <button type="submit" class="primary" id="importBtn" disabled>
+            Import events
+          </button>
+        </form>
+
+        <div id="importProgress" class="progress hidden"
+          aria-label="Upload progress">
+          <div></div>
+        </div>
+        <div id="importResult"></div>
+      </article>
+    </section>
+
+    <!-- NEW: Live Login Risk Analyzer -->
+    <section id="login-analyzer" class="page hidden">
+      <article class="card">
+        <h2>🛡️ Live Login Risk Analyzer</h2>
+        <p>
+          Evaluate login context and identify potentially suspicious activity.
+        </p>
+
+        <form id="loginAnalyzerForm">
+          <label for="analyzerUsername">Username</label>
+          <input id="analyzerUsername"
+            name="username"
+            type="text"
+            required
+            maxlength="100"
+            autocomplete="username"
+            placeholder="Enter test username">
+
+          <label for="analyzerPassword">Password</label>
+          <input id="analyzerPassword"
+            name="password"
+            type="password"
+            required
+            autocomplete="off"
+            placeholder="Demo only — do not enter a real password">
+
+          <p class="muted">
+            Demo only: this analyzer does not verify passwords.
+            Never enter a real password here.
+          </p>
+
+          <label for="deviceKnown">Is this a recognized device?</label>
+          <select id="deviceKnown" name="deviceKnown" required>
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+
+          <label for="unusualLocation">Is the login location unusual?</label>
+          <select id="unusualLocation" name="unusualLocation" required>
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+
+          <label for="failedAttempts">Recent failed login attempts</label>
+          <input id="failedAttempts"
+            name="failedAttempts"
+            type="number"
+            min="0"
+            max="100"
+            value="0"
+            required>
+
+          <label for="loginHour">Login hour (0–23)</label>
+          <input id="loginHour"
+            name="loginHour"
+            type="number"
+            min="0"
+            max="23"
+            value="12"
+            required>
+
+          <button type="submit" class="primary" id="analyzeLoginBtn">
+            Analyze Login
+          </button>
+        </form>
+
+        <div id="loginAnalysisResult" aria-live="polite"></div>
+      </article>
+    </section>
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/login-analyzer.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/events.js"></script>
+<script src="js/alerts.js"></script>
+<script src="js/investigation.js"></script>
+<script src="js/import.js"></script>
+<script src="js/baselines.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
